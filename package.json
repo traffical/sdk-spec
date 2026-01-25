@@ -1,0 +1,45 @@
+{
+  "name": "@traffical/sdk-spec",
+  "version": "0.1.0",
+  "description": "Language-agnostic specifications for Traffical SDKs - schemas and test vectors",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./schemas/*": "./schemas/*",
+    "./test-vectors/*": "./test-vectors/*"
+  },
+  "files": [
+    "schemas",
+    "test-vectors",
+    "index.js",
+    "index.cjs",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "prepublishOnly": "node scripts/build.js"
+  },
+  "keywords": [
+    "traffical",
+    "sdk",
+    "specification",
+    "schema",
+    "test-vectors",
+    "feature-flags",
+    "experimentation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/traffical/sdk-spec"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
+
