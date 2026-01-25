@@ -21,9 +21,7 @@
     "index.cjs",
     "index.d.ts"
   ],
-  "scripts": {
-    "prepublishOnly": "node scripts/build.js"
-  },
+  "scripts": {},
   "keywords": [
     "traffical",
     "sdk",
