@@ -1,0 +1,59 @@
+{
+  "description": "Test vectors for condition-based targeting",
+  "bundle": "bundle_conditions.json",
+  "testCases": [
+    {
+      "name": "high_value_cart",
+      "context": {
+        "userId": "user-high-value",
+        "cartValue": 150,
+        "deviceType": "desktop"
+      },
+      "expectedAssignments": {
+        "checkout.ctaText": "Buy Now - Limited Stock!",
+        "checkout.showUrgency": true
+      },
+      "comment": "High value cart triggers urgency treatment"
+    },
+    {
+      "name": "mobile_user_low_cart",
+      "context": {
+        "userId": "user-mobile",
+        "cartValue": 50,
+        "deviceType": "mobile"
+      },
+      "expectedAssignments": {
+        "checkout.ctaText": "Buy Now",
+        "checkout.showUrgency": false
+      },
+      "comment": "Mobile user with low cart value gets mobile CTA"
+    },
+    {
+      "name": "desktop_user_low_cart",
+      "context": {
+        "userId": "user-desktop",
+        "cartValue": 50,
+        "deviceType": "desktop"
+      },
+      "expectedAssignments": {
+        "checkout.ctaText": "Complete Purchase",
+        "checkout.showUrgency": false
+      },
+      "comment": "Desktop user with low cart value gets defaults"
+    },
+    {
+      "name": "mobile_user_high_cart",
+      "context": {
+        "userId": "user-mobile-high",
+        "cartValue": 200,
+        "deviceType": "mobile"
+      },
+      "expectedAssignments": {
+        "checkout.ctaText": "Buy Now - Limited Stock!",
+        "checkout.showUrgency": true
+      },
+      "comment": "High value cart condition takes precedence (first matching policy)"
+    }
+  ]
+}
+

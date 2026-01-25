@@ -1,0 +1,76 @@
+{
+  "version": "2024-01-01T00:00:00.000Z",
+  "orgId": "org_test",
+  "projectId": "proj_test",
+  "env": "production",
+  "hashing": {
+    "unitKey": "userId",
+    "bucketCount": 1000
+  },
+  "parameters": [
+    {
+      "key": "checkout.ctaText",
+      "type": "string",
+      "default": "Complete Purchase",
+      "layerId": "layer_checkout",
+      "namespace": "checkout"
+    },
+    {
+      "key": "checkout.showUrgency",
+      "type": "boolean",
+      "default": false,
+      "layerId": "layer_checkout",
+      "namespace": "checkout"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer_checkout",
+      "policies": [
+        {
+          "id": "policy_high_value",
+          "state": "running",
+          "kind": "static",
+          "allocations": [
+            {
+              "name": "urgency_treatment",
+              "bucketRange": [0, 999],
+              "overrides": {
+                "checkout.ctaText": "Buy Now - Limited Stock!",
+                "checkout.showUrgency": true
+              }
+            }
+          ],
+          "conditions": [
+            {
+              "field": "cartValue",
+              "op": "gte",
+              "value": 100
+            }
+          ]
+        },
+        {
+          "id": "policy_mobile",
+          "state": "running",
+          "kind": "static",
+          "allocations": [
+            {
+              "name": "mobile_cta",
+              "bucketRange": [0, 999],
+              "overrides": {
+                "checkout.ctaText": "Buy Now"
+              }
+            }
+          ],
+          "conditions": [
+            {
+              "field": "deviceType",
+              "op": "eq",
+              "value": "mobile"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

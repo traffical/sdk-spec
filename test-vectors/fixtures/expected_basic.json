@@ -1,0 +1,72 @@
+{
+  "description": "Test vectors for basic parameter resolution",
+  "bundle": "bundle_basic.json",
+  "testCases": [
+    {
+      "name": "user_abc_treatment_group",
+      "context": {
+        "userId": "user-abc"
+      },
+      "expectedHashing": {
+        "layer_ui": {
+          "bucket": 551,
+          "comment": "FNV-1a hash of 'user-abc:layer_ui' mod 1000"
+        },
+        "layer_pricing": {
+          "bucket": 913,
+          "comment": "FNV-1a hash of 'user-abc:layer_pricing' mod 1000"
+        }
+      },
+      "expectedAssignments": {
+        "ui.primaryColor": "#FF0000",
+        "ui.buttonText": "Click Me",
+        "pricing.discount": 0
+      },
+      "comment": "User in treatment bucket for UI (551 >= 500), no discount (913 >= 600)"
+    },
+    {
+      "name": "user_xyz_control_group",
+      "context": {
+        "userId": "user-xyz"
+      },
+      "expectedHashing": {
+        "layer_ui": {
+          "bucket": 214,
+          "comment": "FNV-1a hash of 'user-xyz:layer_ui' mod 1000"
+        },
+        "layer_pricing": {
+          "bucket": 42,
+          "comment": "FNV-1a hash of 'user-xyz:layer_pricing' mod 1000"
+        }
+      },
+      "expectedAssignments": {
+        "ui.primaryColor": "#0000FF",
+        "ui.buttonText": "Click Me",
+        "pricing.discount": 10
+      },
+      "comment": "User in control bucket for UI (214 < 500), 10% discount (42 in 0-299)"
+    },
+    {
+      "name": "user_123_treatment",
+      "context": {
+        "userId": "user-123"
+      },
+      "expectedHashing": {
+        "layer_ui": {
+          "bucket": 871,
+          "comment": "FNV-1a hash of 'user-123:layer_ui' mod 1000"
+        },
+        "layer_pricing": {
+          "bucket": 177,
+          "comment": "FNV-1a hash of 'user-123:layer_pricing' mod 1000"
+        }
+      },
+      "expectedAssignments": {
+        "ui.primaryColor": "#FF0000",
+        "ui.buttonText": "Click Me",
+        "pricing.discount": 10
+      },
+      "comment": "User in treatment bucket for UI (871 >= 500), 10% discount (177 in 0-299)"
+    }
+  ]
+}

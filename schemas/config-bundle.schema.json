@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://traffical.io/schemas/config-bundle.json",
+  "title": "ConfigBundle",
+  "description": "The complete configuration bundle for a Traffical project/environment. This is what the SDK fetches and caches.",
+  "type": "object",
+  "required": ["version", "orgId", "projectId", "env", "hashing", "parameters", "layers"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp for cache invalidation / ETag generation"
+    },
+    "orgId": {
+      "type": "string",
+      "description": "Organization ID"
+    },
+    "projectId": {
+      "type": "string",
+      "description": "Project ID"
+    },
+    "env": {
+      "type": "string",
+      "description": "Environment (e.g., 'production', 'staging')"
+    },
+    "hashing": {
+      "$ref": "#/definitions/BundleHashingConfig"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BundleParameter"
+      },
+      "description": "All parameters for this project/env with defaults and layer membership"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BundleLayer"
+      },
+      "description": "All layers with their policies"
+    }
+  },
+  "definitions": {
+    "BundleHashingConfig": {
+      "type": "object",
+      "required": ["unitKey", "bucketCount"],
+      "properties": {
+        "unitKey": {
+          "type": "string",
+          "description": "The context field name to use as the unit key (e.g., 'userId', 'deviceId')"
+        },
+        "bucketCount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of buckets for allocation (e.g., 1000, 10000)"
+        }
+      }
+    },
+    "BundleParameter": {
+      "type": "object",
+      "required": ["key", "type", "default", "layerId", "namespace"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Parameter key (e.g., 'ui.primaryColor', 'pricing.discount')"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "json"],
+          "description": "Value type"
+        },
+        "default": {
+          "description": "Default value when no policy overrides apply"
+        },
+        "layerId": {
+          "type": "string",
+          "description": "The layer this parameter belongs to"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for organizational purposes"
+        }
+      }
+    },
+    "BundleLayer": {
+      "type": "object",
+      "required": ["id", "policies"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Layer ID"
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundlePolicy"
+          },
+          "description": "Policies within this layer (evaluated in order)"
+        }
+      }
+    },
+    "BundleContextLogging": {
+      "type": "object",
+      "required": ["allowedFields"],
+      "properties": {
+        "allowedFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Context fields to include in exposure events (allowlist). Only these fields will be logged for contextual bandit training."
+        }
+      },
+      "description": "Configuration for context logging in exposure events. Used for contextual bandit training while protecting PII."
+    },
+    "BundlePolicy": {
+      "type": "object",
+      "required": ["id", "state", "kind", "allocations", "conditions"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Policy ID for tracking and analytics"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["draft", "running", "paused", "completed"],
+          "description": "Current state of the policy"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["static", "adaptive"],
+          "description": "Policy kind: 'static' for fixed allocations, 'adaptive' for learning-based"
+        },
+        "allocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundleAllocation"
+          },
+          "description": "Bucket ranges mapped to parameter overrides"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundleCondition"
+          },
+          "description": "Context predicates that must all match for eligibility"
+        },
+        "stateVersion": {
+          "type": "string",
+          "format": "date-time",
+          "description": "For adaptive policies: version of the optimization state"
+        },
+        "contextLogging": {
+          "$ref": "#/definitions/BundleContextLogging",
+          "description": "For adaptive policies: context fields to log in exposure events for contextual bandit training"
+        }
+      }
+    },
+    "BundleAllocation": {
+      "type": "object",
+      "required": ["name", "bucketRange", "overrides"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Variant name for tracking (e.g., 'control', 'treatment_a')"
+        },
+        "bucketRange": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Bucket range [start, end] inclusive"
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Parameter overrides for units in this bucket range"
+        }
+      }
+    },
+    "BundleCondition": {
+      "type": "object",
+      "required": ["field", "op"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Context field to evaluate"
+        },
+        "op": {
+          "type": "string",
+          "enum": ["eq", "neq", "in", "nin", "gt", "gte", "lt", "lte", "contains", "startsWith", "endsWith", "regex", "exists", "notExists"],
+          "description": "Comparison operator"
+        },
+        "value": {
+          "description": "Single value for binary operators"
+        },
+        "values": {
+          "type": "array",
+          "description": "Multiple values for 'in'/'nin' operators"
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,89 @@
+{
+  "version": "2024-01-01T00:00:00.000Z",
+  "orgId": "org_test",
+  "projectId": "proj_test",
+  "env": "production",
+  "hashing": {
+    "unitKey": "userId",
+    "bucketCount": 1000
+  },
+  "parameters": [
+    {
+      "key": "ui.primaryColor",
+      "type": "string",
+      "default": "#000000",
+      "layerId": "layer_ui",
+      "namespace": "ui"
+    },
+    {
+      "key": "ui.buttonText",
+      "type": "string",
+      "default": "Click Me",
+      "layerId": "layer_ui",
+      "namespace": "ui"
+    },
+    {
+      "key": "pricing.discount",
+      "type": "number",
+      "default": 0,
+      "layerId": "layer_pricing",
+      "namespace": "pricing"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer_ui",
+      "policies": [
+        {
+          "id": "policy_color_test",
+          "state": "running",
+          "kind": "static",
+          "allocations": [
+            {
+              "name": "control",
+              "bucketRange": [0, 499],
+              "overrides": {
+                "ui.primaryColor": "#0000FF"
+              }
+            },
+            {
+              "name": "treatment",
+              "bucketRange": [500, 999],
+              "overrides": {
+                "ui.primaryColor": "#FF0000"
+              }
+            }
+          ],
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "id": "layer_pricing",
+      "policies": [
+        {
+          "id": "policy_discount",
+          "state": "running",
+          "kind": "static",
+          "allocations": [
+            {
+              "name": "discount_10",
+              "bucketRange": [0, 299],
+              "overrides": {
+                "pricing.discount": 10
+              }
+            },
+            {
+              "name": "discount_20",
+              "bucketRange": [300, 599],
+              "overrides": {
+                "pricing.discount": 20
+              }
+            }
+          ],
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}

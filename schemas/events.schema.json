@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://traffical.io/schemas/events.json",
+  "title": "TrafficalEvents",
+  "description": "Event schemas for tracking exposures, decisions, and user events in Traffical",
+  "definitions": {
+    "BaseEvent": {
+      "type": "object",
+      "required": ["type", "orgId", "projectId", "env", "unitKey", "timestamp"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Optional client-generated event ID for deduplication and linking"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["exposure", "decision", "track"],
+          "description": "Event type"
+        },
+        "orgId": {
+          "type": "string",
+          "description": "Organization ID"
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Project ID"
+        },
+        "env": {
+          "type": "string",
+          "description": "Environment"
+        },
+        "unitKey": {
+          "type": "string",
+          "description": "Unit key value - the identifier used for bucketing"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Optional user identifier"
+        },
+        "anonymousId": {
+          "type": "string",
+          "description": "Optional anonymous identifier"
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Optional session identifier"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "Optional request identifier"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Event timestamp (ISO 8601)"
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Context snapshot at the time of the event"
+        },
+        "sdkName": {
+          "type": "string",
+          "description": "SDK that generated this event (e.g., 'js-client', 'node', 'react')"
+        },
+        "sdkVersion": {
+          "type": "string",
+          "description": "Version of the SDK that generated this event"
+        }
+      }
+    },
+    "ExposureLayerInfo": {
+      "type": "object",
+      "required": ["layerId", "bucket"],
+      "properties": {
+        "layerId": {
+          "type": "string"
+        },
+        "bucket": {
+          "type": "integer"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "allocationName": {
+          "type": "string"
+        }
+      }
+    },
+    "TrackAttribution": {
+      "type": "object",
+      "required": ["layerId", "policyId", "allocationName"],
+      "properties": {
+        "layerId": {
+          "type": "string"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "allocationName": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Attribution weight (0.0-1.0)"
+        },
+        "model": {
+          "type": "string",
+          "enum": ["first_touch", "last_touch", "linear", "time_decay", "position_based"],
+          "description": "Attribution model used"
+        }
+      }
+    },
+    "ExposureEvent": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseEvent" },
+        {
+          "type": "object",
+          "required": ["assignments", "layers"],
+          "properties": {
+            "type": {
+              "const": "exposure"
+            },
+            "assignments": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "The parameter assignments that were exposed"
+            },
+            "layers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExposureLayerInfo"
+              },
+              "description": "Per-layer resolution metadata"
+            },
+            "decisionId": {
+              "type": "string",
+              "description": "Reference to the decision event"
+            }
+          }
+        }
+      ]
+    },
+    "DecisionEvent": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseEvent" },
+        {
+          "type": "object",
+          "required": ["assignments", "layers"],
+          "properties": {
+            "type": {
+              "const": "decision"
+            },
+            "requestedParameters": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Parameters that were requested"
+            },
+            "assignments": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "The resolved assignments"
+            },
+            "layers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExposureLayerInfo"
+              },
+              "description": "Resolution metadata"
+            },
+            "latencyMs": {
+              "type": "integer",
+              "description": "Processing time in milliseconds"
+            }
+          }
+        }
+      ]
+    },
+    "TrackEvent": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseEvent" },
+        {
+          "type": "object",
+          "required": ["event"],
+          "properties": {
+            "type": {
+              "const": "track"
+            },
+            "event": {
+              "type": "string",
+              "description": "Event name (e.g., 'purchase', 'add_to_cart', 'page_view')"
+            },
+            "decisionId": {
+              "type": "string",
+              "description": "Reference to the decision event for attribution"
+            },
+            "value": {
+              "type": "number",
+              "description": "Primary numeric value for optimization (e.g., revenue amount)"
+            },
+            "values": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "description": "Secondary values for multi-objective optimization"
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Event properties/metadata (e.g., orderId, itemSku)"
+            },
+            "attribution": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TrackAttribution"
+              },
+              "description": "Attribution chain - which policies/allocations influenced this"
+            },
+            "eventTimestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "For delayed events: the original event timestamp"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/ExposureEvent" },
+    { "$ref": "#/definitions/DecisionEvent" },
+    { "$ref": "#/definitions/TrackEvent" }
+  ]
+}
