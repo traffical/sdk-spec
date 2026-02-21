@@ -1,0 +1,156 @@
+{
+  "description": "Test vectors for edge-policy resolution via ResolveOptions.edgeResults",
+  "bundle": "bundle_edge_policies.json",
+  "entityWeights": "entity_weights.json",
+  "testCases": [
+    {
+      "name": "entity_specific_weights",
+      "comment": "prod-42 has entity-specific weights [0.7, 0.3]; seed hash random=0.4106 < 0.7 selects index 0 (variant_a)",
+      "context": { "userId": "user-abc", "productId": "prod-42" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    },
+    {
+      "name": "entity_specific_prod99",
+      "comment": "prod-99 has entity-specific weights [0.2, 0.8]; seed hash random=0.673 >= 0.2 selects index 1 (variant_b)",
+      "context": { "userId": "user-abc", "productId": "prod-99" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 1, "entityId": "prod-99" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 20,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_b", "allocationName": "variant_b" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    },
+    {
+      "name": "global_fallback_weights",
+      "comment": "prod-new not in entities; uses global weights [0.5, 0.5]; seed hash random=0.4371 < 0.5 selects index 0 (variant_a)",
+      "context": { "userId": "user-xyz", "productId": "prod-new" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-new" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 377, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 828, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 191 }
+      ]
+    },
+    {
+      "name": "missing_entity_weights_uniform",
+      "comment": "No entity weights in KV at all; uniform weights [0.5, 0.5]; seed hash for prod-42:user-123 random=0.857 >= 0.5 selects index 1 (variant_b)",
+      "context": { "userId": "user-123", "productId": "prod-42" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 1, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 20,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 468, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 497, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_b", "allocationName": "variant_b" },
+        { "layerId": "layer_edge_dynamic", "bucket": 422 }
+      ]
+    },
+    {
+      "name": "dynamic_allocation",
+      "comment": "numVariants=4 triggers dynamic allocation; global weights [0.25x4]; seed hash random=0.1457 < 0.25 selects index 0",
+      "context": { "userId": "user-abc", "productId": "prod-42", "numVariants": 4 },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" },
+        { "policyId": "policy_edge_dynamic", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438, "policyId": "policy_edge_dynamic", "allocationId": "policy_edge_dynamic_dynamic_0", "allocationName": "0" }
+      ]
+    },
+    {
+      "name": "mixed_standard_and_edge",
+      "comment": "All three layers resolve; user-xyz in standard control (bucket 377), edge fixed variant_a (global weights), dynamic skipped (no numVariants)",
+      "context": { "userId": "user-xyz", "productId": "prod-new" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-new" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 377, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 828, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 191 }
+      ]
+    },
+    {
+      "name": "filtered_parameters_subset",
+      "comment": "Only ui.color requested; edge policies still resolve in layer metadata but only standard override applied",
+      "context": { "userId": "user-abc", "productId": "prod-42" },
+      "defaults": { "ui.color": "#000000" },
+      "edgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF"
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a", "attributionOnly": true },
+        { "layerId": "layer_edge_dynamic", "bucket": 438, "attributionOnly": true }
+      ]
+    },
+    {
+      "name": "missing_entity_context_graceful_skip",
+      "comment": "No productId in context; edge policies skipped, only standard layer resolves",
+      "context": { "userId": "user-abc" },
+      "defaults": { "ui.color": "#000000", "pricing.discount": 0, "selected.index": -1 },
+      "edgeResults": [],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 0,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921 },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    }
+  ]
+}

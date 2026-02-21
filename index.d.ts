@@ -62,8 +62,58 @@ export interface ExpectedResults {
 
 export declare const bundleBasic: TestBundle;
 export declare const bundleConditions: TestBundle;
+export declare const bundleEdgePolicies: TestBundle;
 export declare const expectedBasic: ExpectedResults;
 export declare const expectedConditions: ExpectedResults;
+
+export interface EdgeResultEntry {
+  policyId: string;
+  allocationIndex: number;
+  entityId: string;
+}
+
+export interface ExpectedEdgePoliciesResults {
+  description: string;
+  bundle: string;
+  entityWeights: string;
+  testCases: Array<{
+    name: string;
+    comment?: string;
+    context: Record<string, unknown>;
+    defaults: Record<string, unknown>;
+    edgeResults: EdgeResultEntry[];
+    expectedAssignments: Record<string, unknown>;
+    expectedLayers: Array<Record<string, unknown>>;
+  }>;
+}
+
+export interface ExpectedResolveResults {
+  description: string;
+  bundle: string;
+  entityWeights: string;
+  testCases: Array<{
+    name: string;
+    comment?: string;
+    request: {
+      context: Record<string, unknown>;
+      parameters?: string[];
+    };
+    expectedEdgeResults: EdgeResultEntry[];
+    expectedAssignments: Record<string, unknown>;
+    expectedLayers: Array<Record<string, unknown>>;
+  }>;
+}
+
+export interface EntityWeightsFixture {
+  [policyId: string]: {
+    _global: { entityId: string; weights: number[]; computedAt: string };
+    entities: Record<string, { entityId: string; weights: number[]; computedAt: string }>;
+  };
+}
+
+export declare const expectedEdgePolicies: ExpectedEdgePoliciesResults;
+export declare const expectedResolve: ExpectedResolveResults;
+export declare const entityWeights: EntityWeightsFixture;
 
 // Path exports
 export declare const schemaPaths: {
@@ -75,7 +125,11 @@ export declare const schemaPaths: {
 export declare const testVectorPaths: {
   bundleBasic: string;
   bundleConditions: string;
+  bundleEdgePolicies: string;
   expectedBasic: string;
   expectedConditions: string;
+  expectedEdgePolicies: string;
+  expectedResolve: string;
+  entityWeights: string;
 };
 

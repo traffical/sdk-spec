@@ -1,0 +1,29 @@
+{
+  "policy_edge_fixed": {
+    "_global": {
+      "entityId": "_global",
+      "weights": [0.5, 0.5],
+      "computedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "entities": {
+      "prod-42": {
+        "entityId": "prod-42",
+        "weights": [0.7, 0.3],
+        "computedAt": "2024-01-01T00:00:00.000Z"
+      },
+      "prod-99": {
+        "entityId": "prod-99",
+        "weights": [0.2, 0.8],
+        "computedAt": "2024-01-01T00:00:00.000Z"
+      }
+    }
+  },
+  "policy_edge_dynamic": {
+    "_global": {
+      "entityId": "_global",
+      "weights": [0.25, 0.25, 0.25, 0.25],
+      "computedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "entities": {}
+  }
+}

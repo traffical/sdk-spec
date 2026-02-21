@@ -1,0 +1,126 @@
+{
+  "description": "Test vectors for edge worker /v1/resolve endpoint conformance",
+  "bundle": "bundle_edge_policies.json",
+  "entityWeights": "entity_weights.json",
+  "comment": "Each test case represents a POST /v1/resolve request. The edge worker builds defaults from bundle.parameters, computes edgeResults from KV entity weights, then calls decide(). Expected outputs must match a direct decide() call with the same inputs.",
+  "testCases": [
+    {
+      "name": "entity_specific_weights",
+      "comment": "prod-42 has entity-specific weights [0.7, 0.3] for policy_edge_fixed; weighted selection index 0",
+      "request": {
+        "context": { "userId": "user-abc", "productId": "prod-42" }
+      },
+      "expectedEdgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    },
+    {
+      "name": "entity_specific_high_weight_variant_b",
+      "comment": "prod-99 has entity weights [0.2, 0.8]; weighted selection index 1 (variant_b, discount 20)",
+      "request": {
+        "context": { "userId": "user-abc", "productId": "prod-99" }
+      },
+      "expectedEdgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 1, "entityId": "prod-99" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 20,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_b", "allocationName": "variant_b" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    },
+    {
+      "name": "global_fallback_new_entity",
+      "comment": "prod-new not in entity-specific weights; falls back to global [0.5, 0.5]; selects index 0",
+      "request": {
+        "context": { "userId": "user-xyz", "productId": "prod-new" }
+      },
+      "expectedEdgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-new" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 377, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 828, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 191 }
+      ]
+    },
+    {
+      "name": "dynamic_allocation_with_num_variants",
+      "comment": "numVariants=4 triggers dynamic edge policy; global uniform weights [0.25x4]; selects index 0",
+      "request": {
+        "context": { "userId": "user-abc", "productId": "prod-42", "numVariants": 4 }
+      },
+      "expectedEdgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" },
+        { "policyId": "policy_edge_dynamic", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 10,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438, "policyId": "policy_edge_dynamic", "allocationId": "policy_edge_dynamic_dynamic_0", "allocationName": "0" }
+      ]
+    },
+    {
+      "name": "missing_entity_context_skips_edge",
+      "comment": "No productId in context; edge policies cannot build entityId so they are skipped",
+      "request": {
+        "context": { "userId": "user-abc" }
+      },
+      "expectedEdgeResults": [],
+      "expectedAssignments": {
+        "ui.color": "#0000FF",
+        "pricing.discount": 0,
+        "selected.index": -1
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control" },
+        { "layerId": "layer_edge_fixed", "bucket": 921 },
+        { "layerId": "layer_edge_dynamic", "bucket": 438 }
+      ]
+    },
+    {
+      "name": "filtered_parameters",
+      "comment": "Only pricing.discount requested; standard layer becomes attribution-only",
+      "request": {
+        "context": { "userId": "user-abc", "productId": "prod-42" },
+        "parameters": ["pricing.discount"]
+      },
+      "expectedEdgeResults": [
+        { "policyId": "policy_edge_fixed", "allocationIndex": 0, "entityId": "prod-42" }
+      ],
+      "expectedAssignments": {
+        "pricing.discount": 10
+      },
+      "expectedLayers": [
+        { "layerId": "layer_standard", "bucket": 76, "policyId": "policy_standard", "allocationId": "alloc_control", "allocationName": "control", "attributionOnly": true },
+        { "layerId": "layer_edge_fixed", "bucket": 921, "policyId": "policy_edge_fixed", "allocationId": "alloc_variant_a", "allocationName": "variant_a" },
+        { "layerId": "layer_edge_dynamic", "bucket": 438, "attributionOnly": true }
+      ]
+    }
+  ]
+}

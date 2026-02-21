@@ -1,0 +1,106 @@
+{
+  "version": "2024-01-01T00:00:00.000Z",
+  "orgId": "org_test",
+  "projectId": "proj_test",
+  "env": "production",
+  "hashing": {
+    "unitKey": "userId",
+    "bucketCount": 1000
+  },
+  "parameters": [
+    {
+      "key": "ui.color",
+      "type": "string",
+      "default": "#000000",
+      "layerId": "layer_standard",
+      "namespace": "ui"
+    },
+    {
+      "key": "pricing.discount",
+      "type": "number",
+      "default": 0,
+      "layerId": "layer_edge_fixed",
+      "namespace": "pricing"
+    },
+    {
+      "key": "selected.index",
+      "type": "number",
+      "default": -1,
+      "layerId": "layer_edge_dynamic",
+      "namespace": "selected"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer_standard",
+      "policies": [
+        {
+          "id": "policy_standard",
+          "state": "running",
+          "kind": "static",
+          "allocations": [
+            {
+              "id": "alloc_control",
+              "name": "control",
+              "bucketRange": [0, 499],
+              "overrides": { "ui.color": "#0000FF" }
+            },
+            {
+              "id": "alloc_treatment",
+              "name": "treatment",
+              "bucketRange": [500, 999],
+              "overrides": { "ui.color": "#FF0000" }
+            }
+          ],
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "id": "layer_edge_fixed",
+      "policies": [
+        {
+          "id": "policy_edge_fixed",
+          "state": "running",
+          "kind": "adaptive",
+          "allocations": [
+            {
+              "id": "alloc_variant_a",
+              "name": "variant_a",
+              "bucketRange": [0, 499],
+              "overrides": { "pricing.discount": 10 }
+            },
+            {
+              "id": "alloc_variant_b",
+              "name": "variant_b",
+              "bucketRange": [500, 999],
+              "overrides": { "pricing.discount": 20 }
+            }
+          ],
+          "conditions": [],
+          "entityConfig": {
+            "entityKeys": ["productId"],
+            "resolutionMode": "edge"
+          }
+        }
+      ]
+    },
+    {
+      "id": "layer_edge_dynamic",
+      "policies": [
+        {
+          "id": "policy_edge_dynamic",
+          "state": "running",
+          "kind": "adaptive",
+          "allocations": [],
+          "conditions": [],
+          "entityConfig": {
+            "entityKeys": ["productId"],
+            "resolutionMode": "edge",
+            "dynamicAllocations": { "countKey": "numVariants" }
+          }
+        }
+      ]
+    }
+  ]
+}
