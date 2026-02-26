@@ -9,6 +9,7 @@ All Traffical SDKs must produce identical results for the same inputs. These tes
 1. **Hashing consistency** - FNV-1a hash produces the same bucket across all implementations
 2. **Resolution correctness** - Parameter resolution follows the layered priority system
 3. **Condition evaluation** - Context predicates are evaluated identically
+4. **Contextual scoring** - Softmax scoring with trained model coefficients produces identical allocation selections
 
 ## Fixture Structure
 
@@ -51,6 +52,26 @@ Each SDK implementation should:
 2. For each test case:
    - Compute buckets and verify against `expectedHashing`
    - Resolve parameters and verify against `expectedAssignments`
+
+## Fixture Inventory
+
+| Bundle | Expected | Description |
+|--------|----------|-------------|
+| `bundle_basic.json` | `expected_basic.json` | Basic parameter resolution with bucket-based allocation |
+| `bundle_conditions.json` | `expected_conditions.json` | Condition evaluation for targeting |
+| `bundle_edge_policies.json` | `expected_edge_policies.json` | Per-entity policies with edge resolution |
+| `bundle_contextual.json` | `expected_contextual.json` | Contextual bandit scoring with trained model coefficients |
+
+### `bundle_contextual.json` / `expected_contextual.json`
+
+Tests SDK-side contextual bandit scoring. The bundle contains a policy with a `contextualModel` field holding trained linear coefficients (one numeric feature: `engagement_score`, one categorical feature: `device_type`). Test cases cover:
+
+- **High engagement mobile user** - Strong signal favoring treatment_a via softmax
+- **Low engagement desktop user** - Balanced probabilities, hash-dependent selection
+- **Missing context fields** - Falls back to `missing` coefficient values (scores reduce to intercepts)
+- **Unknown categorical value** - Category not in trained values, uses `missing` coefficient
+
+Each test case documents the raw scores, softmax seed, and expected allocation for deterministic verification.
 
 ## Adding New Test Cases
 

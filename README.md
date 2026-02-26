@@ -94,6 +94,30 @@ for each byte in input:
 return hash >>> 0  // Ensure unsigned 32-bit
 ```
 
+## Contextual Model Resolution
+
+Policies with `algorithm: "linear_contextual"` ship a trained model in the bundle via the `contextualModel` field on `BundlePolicy`. When present, the SDK uses this model to compute personalized allocation probabilities instead of the standard bucket-based assignment.
+
+### Scoring Pipeline
+
+1. **Linear score per allocation**: `score = intercept + SUM(coef_i * feature_i)`. For each allocation, look up its `BundleAllocationCoefficients`. If an allocation has no coefficients, use `defaultAllocationScore`.
+2. **Softmax**: Convert raw scores to probabilities using temperature `gamma`. Lower gamma is more deterministic (exploitative), higher gamma is more uniform (explorative).
+3. **Probability floor**: Enforce `actionProbabilityFloor` as a minimum probability for any allocation to ensure continued exploration. Clamp below-floor entries and renormalize.
+4. **Deterministic selection**: Use `weightedSelection(probabilities, seed)` with seed `"ctx:" + unitKeyValue + ":" + policyId` to deterministically select an allocation via FNV-1a hashing.
+
+### Feature Types
+
+- **Numeric**: `score += coef * contextValue`. When the context field is missing or non-numeric, `missing` is added instead.
+- **Categorical**: `score += values[contextValue]`. When the context field is missing or the value is not in the `values` map, `missing` is added instead.
+
+### Graceful Degradation
+
+If `contextualModel` is absent on a policy (no trained model yet), the SDK falls through to standard bucket-based resolution using the allocation bucket ranges. This means newly-created contextual policies serve uniform traffic until the first training run publishes coefficients.
+
+### Test Vectors
+
+See `test-vectors/fixtures/bundle_contextual.json` and `expected_contextual.json` for conformance test cases covering numeric features, categorical features, missing context fields, and unknown categorical values.
+
 ## SDK Implementations
 
 | Language | Repository |

@@ -63,8 +63,27 @@ export interface ExpectedResults {
 export declare const bundleBasic: TestBundle;
 export declare const bundleConditions: TestBundle;
 export declare const bundleEdgePolicies: TestBundle;
+export declare const bundleContextual: TestBundle;
 export declare const expectedBasic: ExpectedResults;
 export declare const expectedConditions: ExpectedResults;
+
+export interface ExpectedContextualResults {
+  description: string;
+  bundle: string;
+  testCases: Array<{
+    name: string;
+    context: Record<string, unknown>;
+    expectedScoring: {
+      scores: number[];
+      seed: string;
+      comment: string;
+    };
+    expectedAssignments: Record<string, unknown>;
+    expectedAllocation: string;
+  }>;
+}
+
+export declare const expectedContextual: ExpectedContextualResults;
 
 export interface EdgeResultEntry {
   policyId: string;
@@ -126,10 +145,12 @@ export declare const testVectorPaths: {
   bundleBasic: string;
   bundleConditions: string;
   bundleEdgePolicies: string;
+  bundleContextual: string;
   expectedBasic: string;
   expectedConditions: string;
   expectedEdgePolicies: string;
   expectedResolve: string;
+  expectedContextual: string;
   entityWeights: string;
 };
 

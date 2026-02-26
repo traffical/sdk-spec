@@ -154,6 +154,10 @@
         "contextLogging": {
           "$ref": "#/definitions/BundleContextLogging",
           "description": "For adaptive policies: context fields to log in exposure events for contextual bandit training"
+        },
+        "contextualModel": {
+          "$ref": "#/definitions/BundleContextualModel",
+          "description": "For linear_contextual policies: trained model for SDK-side scoring. When present, the SDK computes personalized allocation probabilities instead of using bucket-based assignment."
         }
       }
     },
@@ -202,6 +206,101 @@
           "description": "Multiple values for 'in'/'nin' operators"
         }
       }
+    },
+    "BundleContextualModel": {
+      "type": "object",
+      "required": ["gamma", "actionProbabilityFloor", "defaultAllocationScore", "coefficients"],
+      "properties": {
+        "gamma": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Softmax temperature (0-1). Lower values make selection more deterministic."
+        },
+        "actionProbabilityFloor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum probability for any allocation (ensures continued exploration)."
+        },
+        "defaultAllocationScore": {
+          "type": "number",
+          "description": "Default score for allocations without trained coefficients."
+        },
+        "coefficients": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/BundleAllocationCoefficients"
+          },
+          "description": "Coefficients per allocation, keyed by allocation name."
+        }
+      },
+      "description": "Contextual bandit model for SDK-side scoring. Contains trained coefficients used to compute personalized allocation probabilities via softmax."
+    },
+    "BundleAllocationCoefficients": {
+      "type": "object",
+      "required": ["intercept", "numeric", "categorical"],
+      "properties": {
+        "intercept": {
+          "type": "number",
+          "description": "Base score (bias term)."
+        },
+        "numeric": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundleNumericCoefficient"
+          },
+          "description": "Numeric feature coefficients."
+        },
+        "categorical": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundleCategoricalCoefficient"
+          },
+          "description": "Categorical feature coefficients."
+        }
+      },
+      "description": "Trained coefficients for a single allocation."
+    },
+    "BundleNumericCoefficient": {
+      "type": "object",
+      "required": ["key", "coef", "missing"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Context field key."
+        },
+        "coef": {
+          "type": "number",
+          "description": "Coefficient value."
+        },
+        "missing": {
+          "type": "number",
+          "description": "Value to add when the field is missing from context."
+        }
+      },
+      "description": "Numeric coefficient: score += coef * contextValue, or missing when absent."
+    },
+    "BundleCategoricalCoefficient": {
+      "type": "object",
+      "required": ["key", "values", "missing"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Context field key."
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Map of category values to their coefficients."
+        },
+        "missing": {
+          "type": "number",
+          "description": "Value to add when the field is missing or has an unknown value."
+        }
+      },
+      "description": "Categorical coefficient: score += values[contextValue], or missing when absent/unknown."
     }
   }
 }

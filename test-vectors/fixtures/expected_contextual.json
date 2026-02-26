@@ -1,0 +1,72 @@
+{
+  "description": "Test vectors for contextual bandit (linear_contextual) scoring. The SDK uses trained model coefficients to compute per-allocation scores, applies softmax with gamma temperature, enforces a probability floor, and deterministically selects an allocation via FNV-1a weighted selection.",
+  "bundle": "bundle_contextual.json",
+  "testCases": [
+    {
+      "name": "high_engagement_mobile",
+      "context": {
+        "userId": "user-high-engage",
+        "engagement_score": 8.0,
+        "device_type": "mobile"
+      },
+      "expectedScoring": {
+        "scores": [0.0, 3.7, 0.0],
+        "seed": "ctx:user-high-engage:policy_contextual",
+        "comment": "control: 0 + 0*8 + 0 = 0. treatment_a: 0.5 + 0.3*8 + 0.8 = 3.7. treatment_b: -0.3 + 0.1*8 + (-0.5) = 0. Softmax heavily favors treatment_a."
+      },
+      "expectedAssignments": {
+        "ui.heroVariant": "hero_bold"
+      },
+      "expectedAllocation": "treatment_a"
+    },
+    {
+      "name": "low_engagement_desktop",
+      "context": {
+        "userId": "user-low-engage",
+        "engagement_score": 1.0,
+        "device_type": "desktop"
+      },
+      "expectedScoring": {
+        "scores": [0.0, 0.6, 0.4],
+        "seed": "ctx:user-low-engage:policy_contextual",
+        "comment": "control: 0 + 0*1 + 0 = 0. treatment_a: 0.5 + 0.3*1 + (-0.2) = 0.6. treatment_b: -0.3 + 0.1*1 + 0.6 = 0.4. Probabilities: ~23%/42%/35%. Hash selects control."
+      },
+      "expectedAssignments": {
+        "ui.heroVariant": "hero_control"
+      },
+      "expectedAllocation": "control"
+    },
+    {
+      "name": "missing_context_fields",
+      "context": {
+        "userId": "user-missing-ctx"
+      },
+      "expectedScoring": {
+        "scores": [0.0, 0.5, -0.3],
+        "seed": "ctx:user-missing-ctx:policy_contextual",
+        "comment": "All features missing, falls back to missing values (all 0). Scores are just intercepts: 0, 0.5, -0.3. Hash selects treatment_a."
+      },
+      "expectedAssignments": {
+        "ui.heroVariant": "hero_bold"
+      },
+      "expectedAllocation": "treatment_a"
+    },
+    {
+      "name": "unknown_categorical_value",
+      "context": {
+        "userId": "user-unknown-device",
+        "engagement_score": 5.0,
+        "device_type": "smartwatch"
+      },
+      "expectedScoring": {
+        "scores": [0.0, 2.0, 0.2],
+        "seed": "ctx:user-unknown-device:policy_contextual",
+        "comment": "device_type=smartwatch not in trained values, uses missing=0. treatment_a: 0.5 + 0.3*5 + 0 = 2.0. Hash selects treatment_a."
+      },
+      "expectedAssignments": {
+        "ui.heroVariant": "hero_bold"
+      },
+      "expectedAllocation": "treatment_a"
+    }
+  ]
+}

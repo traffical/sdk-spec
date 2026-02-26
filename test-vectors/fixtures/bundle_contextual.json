@@ -1,0 +1,95 @@
+{
+  "version": "2024-06-01T00:00:00.000Z",
+  "orgId": "org_test",
+  "projectId": "proj_test",
+  "env": "production",
+  "hashing": {
+    "unitKey": "userId",
+    "bucketCount": 1000
+  },
+  "parameters": [
+    {
+      "key": "ui.heroVariant",
+      "type": "string",
+      "default": "default",
+      "layerId": "layer_hero",
+      "namespace": "ui"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer_hero",
+      "policies": [
+        {
+          "id": "policy_contextual",
+          "state": "running",
+          "kind": "adaptive",
+          "allocations": [
+            {
+              "id": "alloc_control",
+              "name": "control",
+              "bucketRange": [0, 332],
+              "overrides": {
+                "ui.heroVariant": "hero_control"
+              }
+            },
+            {
+              "id": "alloc_treatment_a",
+              "name": "treatment_a",
+              "bucketRange": [333, 665],
+              "overrides": {
+                "ui.heroVariant": "hero_bold"
+              }
+            },
+            {
+              "id": "alloc_treatment_b",
+              "name": "treatment_b",
+              "bucketRange": [666, 999],
+              "overrides": {
+                "ui.heroVariant": "hero_minimal"
+              }
+            }
+          ],
+          "conditions": [],
+          "contextLogging": {
+            "allowedFields": ["engagement_score", "device_type"]
+          },
+          "contextualModel": {
+            "gamma": 1.0,
+            "actionProbabilityFloor": 0.05,
+            "defaultAllocationScore": 0,
+            "coefficients": {
+              "control": {
+                "intercept": 0.0,
+                "numeric": [
+                  { "key": "engagement_score", "coef": 0.0, "missing": 0 }
+                ],
+                "categorical": [
+                  { "key": "device_type", "values": { "mobile": 0, "desktop": 0, "tablet": 0 }, "missing": 0 }
+                ]
+              },
+              "treatment_a": {
+                "intercept": 0.5,
+                "numeric": [
+                  { "key": "engagement_score", "coef": 0.3, "missing": 0 }
+                ],
+                "categorical": [
+                  { "key": "device_type", "values": { "mobile": 0.8, "desktop": -0.2, "tablet": 0.1 }, "missing": 0 }
+                ]
+              },
+              "treatment_b": {
+                "intercept": -0.3,
+                "numeric": [
+                  { "key": "engagement_score", "coef": 0.1, "missing": 0 }
+                ],
+                "categorical": [
+                  { "key": "device_type", "values": { "mobile": -0.5, "desktop": 0.6, "tablet": 0.3 }, "missing": 0 }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

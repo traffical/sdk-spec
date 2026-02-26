@@ -1,6 +1,6 @@
 {
   "name": "@traffical/sdk-spec",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Language-agnostic specifications for Traffical SDKs - schemas and test vectors",
   "type": "module",
   "main": "./index.js",
