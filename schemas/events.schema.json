@@ -82,8 +82,16 @@
         "policyId": {
           "type": "string"
         },
+        "policyKey": {
+          "type": "string",
+          "description": "Stable key of the matched policy (for warehouse data matching)"
+        },
         "allocationName": {
           "type": "string"
+        },
+        "allocationKey": {
+          "type": "string",
+          "description": "Stable key of the matched allocation (for warehouse data matching)"
         }
       }
     },
@@ -97,8 +105,16 @@
         "policyId": {
           "type": "string"
         },
+        "policyKey": {
+          "type": "string",
+          "description": "Stable key of the policy (for warehouse data matching)"
+        },
         "allocationName": {
           "type": "string"
+        },
+        "allocationKey": {
+          "type": "string",
+          "description": "Stable key of the allocation (for warehouse data matching)"
         },
         "weight": {
           "type": "number",
